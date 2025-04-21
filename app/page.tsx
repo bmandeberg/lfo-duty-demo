@@ -16,7 +16,7 @@ export default function Home() {
   const [strokeWidth, setStrokeWidth] = useState<number>(STROKE_WIDTH)
 
   useEffect(() => {
-    const handleResize = () => {
+    const updateDimensions = () => {
       const padding = 16
       const widthRatio = window.innerWidth / SVG_WIDTH
       setSvgWidth(widthRatio < 1 ? SVG_WIDTH * widthRatio - padding * 2 : SVG_WIDTH)
@@ -24,6 +24,11 @@ export default function Home() {
       setStrokeWidth(widthRatio < 1 ? STROKE_WIDTH * widthRatio : STROKE_WIDTH)
     }
 
+    const handleResize = () => {
+      updateDimensions()
+    }
+
+    updateDimensions()
     window.addEventListener('resize', handleResize)
     return () => {
       window.removeEventListener('resize', handleResize)
