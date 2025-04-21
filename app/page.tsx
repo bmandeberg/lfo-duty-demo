@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, CSSProperties as CSS } from 'react'
+import { useState, useMemo, useEffect, CSSProperties as CSS } from 'react'
 import styles from './page.module.css'
 
 const MAX_DUTY_CYCLE = 100
@@ -11,24 +11,42 @@ const STROKE_WIDTH = 8
 export default function Home() {
   const [triangleWave, setTriangleWave] = useState<boolean>(true)
   const [dutyCycle, setDutyCycle] = useState<number>(MAX_DUTY_CYCLE / 2)
+  const [svgWidth, setSvgWidth] = useState<number>(SVG_WIDTH)
+  const [svgHeight, setSvgHeight] = useState<number>(SVG_HEIGHT)
+  const [strokeWidth, setStrokeWidth] = useState<number>(STROKE_WIDTH)
+
+  useEffect(() => {
+    const handleResize = () => {
+      const padding = 16
+      const widthRatio = window.innerWidth / SVG_WIDTH
+      setSvgWidth(widthRatio < 1 ? SVG_WIDTH * widthRatio - padding * 2 : SVG_WIDTH)
+      setSvgHeight(widthRatio < 1 ? SVG_HEIGHT * widthRatio - padding * 2 : SVG_HEIGHT)
+      setStrokeWidth(widthRatio < 1 ? STROKE_WIDTH * widthRatio : STROKE_WIDTH)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
 
   const path = useMemo(() => {
-    const dutyCycleValue = constrain((dutyCycle / MAX_DUTY_CYCLE) * SVG_WIDTH, STROKE_WIDTH, SVG_WIDTH - STROKE_WIDTH)
+    const dutyCycleValue = constrain((dutyCycle / MAX_DUTY_CYCLE) * svgWidth, strokeWidth, svgWidth - strokeWidth)
     return triangleWave
-      ? `M ${STROKE_WIDTH},${SVG_HEIGHT - STROKE_WIDTH} L ${dutyCycleValue},${STROKE_WIDTH} L ${
-          SVG_WIDTH - STROKE_WIDTH
-        },${SVG_HEIGHT - STROKE_WIDTH}`
-      : `M ${STROKE_WIDTH},${
-          SVG_HEIGHT - STROKE_WIDTH
-        } L ${STROKE_WIDTH},${STROKE_WIDTH} L ${dutyCycleValue},${STROKE_WIDTH} L ${dutyCycleValue},${
-          SVG_HEIGHT - STROKE_WIDTH
-        } L ${SVG_WIDTH - STROKE_WIDTH},${SVG_HEIGHT - STROKE_WIDTH}`
-  }, [triangleWave, dutyCycle])
+      ? `M ${strokeWidth},${svgHeight - strokeWidth} L ${dutyCycleValue},${strokeWidth} L ${svgWidth - strokeWidth},${
+          svgHeight - strokeWidth
+        }`
+      : `M ${strokeWidth},${
+          svgHeight - strokeWidth
+        } L ${strokeWidth},${strokeWidth} L ${dutyCycleValue},${strokeWidth} L ${dutyCycleValue},${
+          svgHeight - strokeWidth
+        } L ${svgWidth - strokeWidth},${svgHeight - strokeWidth}`
+  }, [triangleWave, dutyCycle, svgWidth, svgHeight, strokeWidth])
 
   return (
-    <div className={styles.page} style={{ '--svg-width': SVG_WIDTH + 'px', '--svg-height': SVG_HEIGHT + 'px' } as CSS}>
-      <svg viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`} className={styles.svg} xmlns="http://www.w3.org/2000/svg">
-        <path fill="none" stroke="black" strokeWidth={STROKE_WIDTH} strokeLinecap="round" d={path} />
+    <div className={styles.page} style={{ '--svg-width': svgWidth + 'px', '--svg-height': svgHeight + 'px' } as CSS}>
+      <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className={styles.svg} xmlns="http://www.w3.org/2000/svg">
+        <path fill="none" stroke="black" strokeWidth={strokeWidth} strokeLinecap="round" d={path} />
       </svg>
       <div className={styles.controls}>
         <div className={styles.control}>
@@ -40,7 +58,7 @@ export default function Home() {
               checked={triangleWave}
               onChange={() => setTriangleWave(true)}
             />
-            Triangle Wave
+            Triangle
           </label>
           <label>
             <input
@@ -50,7 +68,7 @@ export default function Home() {
               checked={!triangleWave}
               onChange={() => setTriangleWave(false)}
             />
-            Square Wave
+            Square
           </label>
         </div>
         <div className={styles.control}>
